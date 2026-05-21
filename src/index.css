@@ -1,0 +1,16 @@
+@import "tailwindcss";
+
+:root {
+  --bg-primary: #0a0612;
+  --bg-secondary: #120824;
+  --accent-purple: #7c3aed;
+  --accent-cyan: #06b6d4;
+  --text-primary: #f1f5f9;
+  --text-secondary: #94a3b8;
+}
+
+body {
+  background: linear-gradient(to bottom, var(--bg-primary), var(--bg-secondary));
+  color: var(--text-primary);
+  min-height: 100vh;
+}
