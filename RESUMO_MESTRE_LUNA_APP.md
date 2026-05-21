@@ -1,124 +1,115 @@
+---
+
 # RESUMO MESTRE — LUNA APP
 
 ## 1. VISÃO GERAL
-- **Propósito do sistema**: Aplicativo de chat interativo focado em um companheiro virtual (Luna), que simula ser uma vizinha de 40 anos interagindo com o usuário (Marcos). O chat possui contextos automáticos baseados na interação (mensagem ou presencial).
-- **Público-alvo**: Usuários que buscam uma interação e interpretação de papéis (Roleplay) com uma IA focada em imersão narrativa.
-- **Estágio atual do projeto**: Protótipo avançado. O projeto apresenta múltiplas abordagens de frontend (Flutter, Ionic/Angular e React) coabitando o mesmo repositório, conectados a um backend serverless em Vercel e serviço Ollama.
+- **Propósito do sistema**: Aplicativo de chat focado em interações e Roleplay com a "Luna", uma persona simulada (vizinha de 40 anos interagindo com o usuário Marcos). O app processa indicadores emocionais da persona de forma fluída (humor, afeto, energia e sincronia).
+- **Público-alvo**: Usuários em busca de imersão narrativa e interação textual baseada em linguagem corporal e conversacional com uma Inteligência Artificial.
+- **Estágio atual do projeto**: Protótipo funcional avançado. A stack de frontend em React acaba de ser integrada ao backend (Vercel Serverless para LLM) e ao Firebase (memória dinâmica), embora o repositório ainda possua versões legadas (Flutter e Angular) coabitando na raiz.
 
 ## 2. STACK TECNOLÓGICA
-- **Frontend**: O repositório contém três protótipos de frontend não integrados:
-  - React/Vite (pasta `src/`) com TailwindCSS.
-  - Angular + Ionic (pasta `luna-app/`).
-  - Flutter (pasta `lib/`).
-- **Backend**: Função serverless em Node.js (`luna-api/api/chat.js`).
-- **Banco de dados e Storage**: Firebase Firestore (usado para memória e histórico de conversas). **NÃO HÁ** integração com Supabase Storage implementada no código.
-- **Integrações externas**: Conexão com um servidor LLM Ollama (modelo `dolphin-llama3:8b`) via Vercel. **NÃO HÁ** integrações com Evolution API ou Railway implementadas.
-- **Mobile**: Capacitor configurado na versão Angular/Ionic (`luna-app/capacitor.config.ts`) e versão nativa desenvolvida com Flutter.
+- **Frontend**: React (construído com Vite), estilizado com Tailwind CSS e integração de ícones Lucide (localizado na pasta `src/`).
+- **Backend**: API Serverless desenvolvida em Node.js (`luna-api/api/chat.js`) orquestrada via Vercel.
+- **Banco de dados e Storage**: Firebase Firestore para armazenamento NoSQL (lida com os dados de histórico emocional, fatos e resumos da interface). **Não há** integração ou uso de Supabase Storage.
+- **Integrações externas**: Conexão backend direta a uma instância do modelo LLM Ollama (`dolphin-llama3:8b`). **Não existem** integrações de sistemas legados de envio (como Evolution API ou WhatsApp real).
+- **Mobile**: Construído para atuar majoritariamente de forma responsiva como PWA via React/Vite. Menções de mobile nativo existem devido às pastas inativas do Capacitor (`luna-app/capacitor.config.ts`) e projeto Dart (`lib/`).
 
 ## 3. ESTRUTURA DE ARQUIVOS
 - **Mapa completo de pastas e arquivos**:
-  - `/luna-api/`: Backend - Contém as configurações do Vercel (`vercel.json`) e o endpoint `api/chat.js`.
-  - `/luna-app/`: Frontend Ionic/Angular - Contém o app em `/src/app/` com os serviços de memória, api e Firebase.
-  - `/lib/`: Frontend Flutter - Contém `models/`, `screens/` e `services/` e a interface completa de chat.
-  - `/src/`: Frontend React - Contém a tela inicial simulada `App.tsx` e `main.tsx`.
+  - `/src/`: Frontend React funcional, dividido em `/components` e `/services`. Responsável por toda a UI dinâmica atual.
+  - `/luna-api/`: Serviços da API Backend Serverless.
+  - `/lib/`: Código legado em Flutter/Dart contendo modelos, telas e serviços inativos.
+  - `/luna-app/`: Projeto legado em Ionic/Angular que estava em andamento.
+  - `/vercel.json`: Arquivo mestre na raiz do projeto contendo as regras de `rewrites` para a Vercel, delegando `/api/*` à função serverless e a raiz ao React estático.
+  - `/package.json`: Repositório de gerenciamento dos scripts NPM e bibliotecas instaladas da versão React (`vite`, `firebase`, `tailwindcss`, etc).
 - **Responsabilidade de cada arquivo principal**:
-  - `luna-api/api/chat.js`: Função serverless que atua como proxy, recebendo as mensagens e roteando para a instância do Ollama.
-  - `lib/services/api_service.dart` / `luna-app/src/app/services/api.service.ts`: Gerenciam a comunicação do frontend com a API de IA, formatando e injetando o "System Prompt" correto na requisição.
-  - `lib/services/memory_service.dart`: Responsável por montar o prompt de sistema mesclando os dados (resumo e fatos) do usuário com as regras base da persona (Luna).
-  - `lib/services/firebase_service.dart`: Classe que interage de forma direta com o Firestore para carregar/salvar as memórias.
+  - `src/components/LunaScreen.tsx`: Motor principal do painel interativo; une o ChatInput, painel de Avatares, painel de Memória e controle de emoções em uma grid flexível, ativando useEffects que puxam e atualizam métricas em tempo real.
+  - `src/services/firebase.ts`: Exporta a configuração direta de comunicação do front-end com as credenciais do Firestore.
+  - `luna-api/api/chat.js`: Proxy isolado entre o usuário e a inteligência artificial. Injera o prompt de formatação mandatória (System Instructions), bate na API do Ollama e formata os retornos num JSON confiável para atualizar os componentes front-end.
 
 ## 4. MÓDULOS E FUNCIONALIDADES
-- **Módulo de Chat**: Permite o envio e recebimento de mensagens, identificando e injetando automaticamente no contexto se a interação está sendo via "mensagem" de celular (textos e emojis) ou modo "presencial" (textos narrativos usando asteriscos).
-- **Módulo de Memória**: Salva todas as conversas do usuário e busca dinamicamente do Firebase os metadados consolidados (`resumo`, `fatos`), garantindo a continuidade narrativa (persistência de longo prazo).
-- **Fluxo de uso de cada tela**:
-  - **HomeScreen**: Exibe a foto/avatar de Luna, um indicador verde de status "Online agora" e o botão "Conversar".
-  - **ChatScreen**: Exibe as trocas de mensagens na tela. Permite o envio pela caixa de texto de mensagens normais ou interações focadas em linguagem corporal (`*sorrio*`). Ao finalizar/sair do chat, o processo de consolidação de memória é disparado.
+- **Descrição detalhada de cada módulo**:
+  - **Interação (ChatInput & Avatar)**: Permite envio livre de mensagens com sugestões do que falar baseadas na interpretação de momento (entregues dinamicamente pela própria IA).
+  - **Memória Lateral (MemoryPanel)**: Interface que mostra visualmente os metadados consumidos da base no Firebase. Demonstra resumos, fatos da vida e momentos da narrativa.
+  - **Monitoramento Emocional (EmotionalIndicators)**: Feedback visual na interface mostrando o nível de "Humor", "Energia", "Sincronia" e "Afeto", decodificado diretamente pela LLM no momento da resposta.
+- **Fluxo de uso de cada tela**: Todo o acesso desemboca em uma única tela SPA, dividida em colunas em desktop. Toda vez que uma mensagem é enviada, a Vercel chama o Ollama, o JSON de retornos reflete visualmente imediatamente e um espelho do estado emocional daquele minuto é injetado no Firebase Firestore pelo cliente.
 
 ## 5. BANCO DE DADOS
-- **Todas as tabelas (Coleções) e suas colunas no Firebase**:
-  - `memoria` (Documento único e direto no Firestore: `luna`):
-    - `resumo` (string)
-    - `fatos` (array de strings)
-    - `ultima_conversa` (timestamp)
-  - `conversas` (Múltiplos documentos):
-    - `modo` (string: "presencial" ou "message")
-    - `data` (server timestamp)
-    - `mensagens` (array de objetos. Em Flutter possui `id`, `role`, `content`, `timestamp`, `mode`, `isNarrative`)
-- **Relacionamentos entre tabelas**: NoSQL puro baseado em documentos, sem relacionamento rígido por ids.
-- **Regras de isolamento multi-tenant (company_id)**: **NÃO IMPLEMENTADAS NO CÓDIGO**. O sistema não é multi-tenant. Todos os dados são consolidados diretamente para uma única persona e num único documento chamado "luna".
+- **Todas as tabelas e suas colunas (Firestore)**:
+  - `memoria` (Documento único de chaves em uma coleção aberta chamada "memoria", sob o ID "luna"):
+    - `resumo` (String contendo parágrafo de resumo momentâneo).
+    - `fatos` (Array de strings listando propriedades/preferências).
+    - `padroes_usuario` (Array de comportamentos observados).
+    - `estado_emocional` (Objeto atual com propriedades de afeto/humor).
+    - `historico_emocional` (Matriz com objetos timestamp + estado da sessão).
+- **Relacionamentos entre tabelas**: O aplicativo opera em arquitetura NoSQL Plana; sem chaves relacionais declaradas na estrutura de dados do código atual.
+- **Regras de isolamento multi-tenant (company_id)**: **Não implementado no código**. A aplicação opera totalmente em caráter single-tenant, forçando todos os acessos a utilizarem o exato mesmo documento `"luna"`.
 
 ## 6. INTEGRAÇÕES EXTERNAS
-- **Evolution API (fluxo de envio e recebimento)**: **NÃO EXISTE NO CÓDIGO**. O software não integra com WhatsApp oficial. Toda troca de mensagens ocorre no próprio frontend nativo.
-- **Supabase Storage (buckets, policies)**: **NÃO EXISTE NO CÓDIGO**.
-- **Firebase (push notifications)**: **NÃO EXISTE NO CÓDIGO**. Firebase é usado de forma exclusiva para o Firestore Database Client. Não há Push Notifications.
-- **Vercel (deploy e serverless)**: Função provisionada no Vercel (com duração máxima `maxDuration: 30`) para receber as mensagens do frontend e intermediar de forma segura o acesso com o endpoint da LLM.
-- **Railway (Evolution API)**: **NÃO EXISTE NO CÓDIGO**.
-- **Ollama LLM**: Integração manual com engine local/remota operando o `dolphin-llama3:8b`.
+- **Evolution API (fluxo de envio e recebimento)**: **Inexistente**. Não há trocas via WhatsApp oficial nem menções funcionais do tipo.
+- **Supabase Storage (buckets, policies)**: **Inexistente**.
+- **Firebase (push notifications)**: **Inexistente**. Somente o Cloud Firestore Data Storage está implementado em nível transacional.
+- **Vercel (deploy e serverless)**: Atua como hospedeiro central provendo o React Bundle com o `@vercel/static-build` e as funções serverless de orquestração via `@vercel/node`.
+- **Railway (Evolution API)**: **Inexistente**.
 
 ## 7. AUTENTICAÇÃO E SEGURANÇA
-- **Fluxo de login e JWT**: **NÃO EXISTE NO CÓDIGO**. O acesso ao App é totalmente anônimo e direto.
-- **Roles de usuário e permissões**: **NÃO EXISTE NO CÓDIGO**.
-- **Middleware de autenticação**: **NÃO EXISTE NO CÓDIGO**. O acesso à API (`chat.js`) no Vercel está com permissões de CORS abertas de forma genérica para `*`.
-- **Variáveis de ambiente críticas**: `OLLAMA_URL` no backend e `GEMINI_API_KEY` (somente em `.env.example`, mas ainda sem uso efetivo detectado no motor do app).
+- **Fluxo de login e JWT**: **Inexistente**. O usuário abre a página e inicia a conversa sem autenticação.
+- **Roles de usuário e permissões**: **Inexistente**.
+- **Middleware de autenticação**: **Inexistente** (O CORS em `/api/chat.js` permite `*`).
+- **Variáveis de ambiente críticas**: O código depende obrigatoriamente da env `OLLAMA_URL` no back-end para viabilizar as inferências. O front possui credenciais estáticas do Firebase sem tratativa baseada no cliente.
 
-> ⚠️ ATENÇÃO: Falta de autenticação e regras abertas de CORS representam riscos severos, visto que o banco de dados pode ser sobreescrito a qualquer momento devido a ausência de regras no Firestore, e a API serverless pode ser abusada publicamente.
+> ⚠️ ATENÇÃO: As credenciais do Firebase (apiKey, appId) estão vazadas em `firebase.ts` como plain text, e dada a ausência do Firebase Authentication em pareamento com o Firestore Rules, as chaves presentes dão a qualquer observador direitos irrestritos de modificar/deletar completamente o histórico emocional e memórias dos usuários se essas rules não estiverem travadas no painel da infraestrutura.
 
 ## 8. REGRAS DE NEGÓCIO
 - **Todas as regras identificadas no código**: 
-  - A IA precisa se comportar exclusivamente como Luna, e o usuário será sempre reconhecido como Marcos.
-  - Modos de detecção automática: Se a mensagem contiver "elevador", "porta" ou "pessoalmente", a IA assume o comportamento **presencial**, usando asteriscos (*) nas respostas para simular linguagem corporal e tensão crescente.
-  - O modo **mensagem** (ativo por termos como "whatsapp" ou "pelo celular") exige da IA respostas mais casuais e diretas, simulando a troca de mensagens real por celular.
-- **Fluxo completo do funil de vendas**: **NÃO EXISTE NO CÓDIGO**. Trata-se de um app de roleplay, não voltado a vendas.
-- **Fluxo completo do WhatsApp**: **NÃO EXISTE NO CÓDIGO**.
-- **Segregação de visibilidade por role**: **NÃO EXISTE NO CÓDIGO**.
+  - O "cérebro" foi configurado num "System Prompt" em hard-code injetado forçadamente no final de mensagens da API `chat.js`. A LLM é forçada a não entregar prosa textual, mas sim processar obrigatoriamente o retorno num formato validado JSON de 6 parâmetros.
+  - Os estados emocionais não dependem do frontend para cálculo; eles são inteiramente decididos e manipulados através da inferência cognitiva do modelo `dolphin-llama3:8b`. O frontend atua meramente como um terminal que reage à análise.
+- **Fluxo completo do funil de vendas**: **Inexistente**. O projeto é puramente Roleplay e ficção.
+- **Fluxo completo do WhatsApp**: **Inexistente**. O App não funciona no WhatsApp nem suporta multi-agentes ou tickets de venda.
+- **Segregação de visibilidade por role**: **Inexistente**.
 
 ## 9. FLUXO DO WHATSAPP
-> ⚠️ ATENÇÃO: Nenhuma das integrações reais com o mensageiro WhatsApp está presente no código-fonte. Este projeto atua apenas como um emulador conversacional com uma interface similar a um chat.
-- **Envio de texto, áudio, imagem e documento**: Somente envio de texto puro é processado e suportado pelo backend na configuração atual da interface.
-- **Recebimento via webhook**: **NÃO EXISTE NO CÓDIGO**.
-- **Processamento e upload de mídia para o Storage**: **NÃO EXISTE NO CÓDIGO**.
-- **Como a media_url é salva para from_me true e false**: **NÃO EXISTE NO CÓDIGO**.
-- **Instâncias configuradas e seus propósitos**: **NÃO EXISTE NO CÓDIGO**.
+> ⚠️ ATENÇÃO: Todas as subseções abaixo (Envio de arquivos via WHATSAPP, Recebimento de webhooks de mensagens, Processamento no Supabase, Configurações de media_url, e Instâncias Z-API/Evolution) são ABSOLUTAMENTE **INEXISTENTES** no escopo e no código base analisado neste repositório. O "Luna App" simula uma vizinha num simulador estático interno, sem qualquer API mensageira terceira em funcionamento.
 
 ## 10. BUILD E DEPLOY
-- **Processo de build do frontend**:
-  - React (em `/src/`): Build feito via vite, `npm run build`.
-  - Angular/Ionic (em `/luna-app/`): Build pelo Angular CLI (`ng build`).
-  - Flutter (em `/lib/`): Segue fluxo padrão nativo `flutter build`.
-- **Deploy na Vercel (serverless functions)**: O projeto contido em `/luna-api/` efetua deploy via Vercel conectando a rota `api/chat`.
-- **Variáveis de ambiente necessárias**: `OLLAMA_URL` precisará estar exposta na Vercel para o funcionamento da LLM.
-- **Mobile com Capacitor**: Funcional na versão Angular configurada com `capacitor.config.ts`. A pasta `android` já existe com as configurações da plataforma de empacotamento.
+- **Processo de build do frontend**: É efetuado pelo Vite usando o script `npm run vercel-build`, minificando os Typescript files e gerando o cache na pasta `/dist/`.
+- **Deploy na Vercel (serverless functions)**: Na Vercel, o diretório configurado lê o `vercel.json` na raiz da branch, injeta os scripts e isola a rota `/api/chat` usando o build serverless isolado em `luna-api/api/chat.js`.
+- **Variáveis de ambiente necessárias**: A única obrigatória exigida por painel (Vercel ENV Settings) no cenário de produção atual é `OLLAMA_URL`.
+- **Mobile com Capacitor**: Os arquivos de configuração (`capacitor.config.ts`, `android/`) permanecem no projeto como Débito Técnico deixado pelos antigos protótipos de interface, sem função declarada no workflow do Vercel/React atual.
 
 ## 11. PROBLEMAS RESOLVIDOS
-- Não constam no código, branches atuais ou histórico em texto quaisquer problemas de bugfixing específicos e resolvidos com suas respectivas causas raiz e soluções aplicadas.
+- Roteamento defeituoso do Vercel corrigido na transição de repositórios ao unificar o `vercel.json` na pasta-raiz e definir os `rewrites` lógicos.
+- Bug estrutural no Parser da `chat.js`, onde o Ollama estava quebrando a aplicação Vite caso o modelo LLM retornasse Markdown plain text por engano, corrigido com blocos `try/catch`, RegEx (eliminando a flag ```json``` da resposta) e implementando um mock seguro (objeto genérico) de Fallback via node-fetch.
+- Problema de importação Vite/Rollup consertado através da instalação e efetivação da biblioteca central `firebase` via NPM no arquivo `package.json` principal (frontend React).
 
 ## 12. DÉBITOS TÉCNICOS
 - **Problemas conhecidos ainda não resolvidos**:
-  - Extração de Fatos Mockada: O método `extrairFatos` no Flutter e Angular está fixado com lógicas genéricas de estáticas em código (`return 'Marcos mencionou algo de que gosta.'`), ou seja, as novas memórias baseadas nos textos longos não estão ativas usando um LLM de análise.
-  - Endpoints Fixados: A URL de requisição à API `http://100.127.52.14:11434/api/chat` está escrita diretamente no código `api_service.dart`.
-  - Fragmentação do código: Existem três projetos de frontend separados e não unificados na estrutura geral.
+  - Código fonte extremamente fraturado com resíduos extensos e complexos de frameworks concorrentes (Flutter e Angular em pastas `/lib/` e `/luna-app/`) que não fazem mais parte do core de compilação.
+  - "Memória de Longo Prazo" visual não atualiza reativamente, já que não foi implantado o agente analisador que refaz o resumo e coleta os fatos das narrativas mais novas; o sistema atualmente apenas renderiza os blocos previamente injetados ou estáticos.
 - **Riscos identificados no código**:
-  - A API em Vercel tem livre trânsito devido as propriedades de Cross-Origin expostas.
+  - Dependência integral do endpoint hard-coded do Ollama em `chat.js` se não houver ENV, com resposta padrão mockada que pode quebrar a interatividade real caso instável.
+  - O aplicativo grava no Firestore em cima da raiz hard-coded `"luna"`. Usuários simultâneos vão causar colisão letal em tempo real, corrompendo os dados de tela e substituindo `estado_emocional` sucessivamente.
 
-> ⚠️ ATENÇÃO: O código da aplicação cliente expõe chamadas para modificação na API do Firebase e em memória local. A ausência de regras de escrita nos documentos do Firebase (Firestore Rules) é uma falha passível de modificação por qualquer parte externa não autenticada.
+> ⚠️ ATENÇÃO: Falta grave no isolamento (Single-Tenant). A ausência de geração de sessões impede que o app vá ao ar para tráfego simultâneo sem gerar erros de sobreposição de memória entre dois acessantes não autenticados.
 
 ## 13. BACKLOG E MELHORIAS SUGERIDAS
 - **Funcionalidades pendentes**:
-  - Implementar de forma concreta o algoritmo/agent de LLM em `extrairFatos()` que recebe a transcrição do último chat com a Luna, analisa os dados, e insere os novos comportamentos no array de fatos conhecidos.
-  - Desenvolver o mecanismo de autenticação via Firebase para isolamento real das instâncias caso o projeto seja lançado para mais usuários.
+  - Algoritmo assíncrono de consolidação de memórias (uma crôn job ou função LLM paralela que a cada 5 mensagens resume a conversa, atualiza o JSON de resumo e joga pro Firebase).
+  - Roteamento completo, páginas de login e geração de instâncias no Firebase para "múltiplos Marcos".
 - **Melhorias técnicas recomendadas**:
-  - Unificar de vez os três repositórios em apenas uma linguagem definitiva.
-  - Utilizar Variáveis de Ambiente locais e em Produção para as rotas da API em detrimento das Strings injetadas nos services.
+  - Expurgo dos arquivos legados (`/lib`, `pubspec.yaml`, `/luna-app`, `.gitignore` redundantes) para limpar o repositório.
+  - Mudança dos segredos do `firebase.ts` de String text para Import Meta Vars (`VITE_`).
 - **Ordem de prioridade sugerida**:
-  1. Padronizar em um único front-end que será assumido de forma oficial.
-  2. Implementar autenticação básica Firebase.
-  3. Adicionar Variáveis de Ambiente no front.
-  4. Finalizar o fluxo de extração de memória da IA via LLM.
+  1. Configuração de Firebase Auth Anônimo atrelando UUID do browser ao documento do Firestore para gerar `users/XYZ/memoria`.
+  2. Implementação das regras do Firebase Rules no console de Produção.
+  3. Remoção de legados para deixar a pasta limpa (Refactorização pura em prol do Vite).
+  4. Programação do "Agent de consolidação" para alimentar a lista de "Padrões" do usuário reativamente.
 
 ## 14. VARIÁVEIS DE AMBIENTE
 - **Lista completa de todas as variáveis necessárias**:
-  - `OLLAMA_URL`: Obrigatório. URL de apontamento para a infraestrutura que roda o modelo Ollama.
-  - `GEMINI_API_KEY`: Em teste ou como reserva (consta apenas em `.env.example`).
-  - `APP_URL`: URL base do projeto (consta apenas em `.env.example`).
-- **Onde cada uma é usada**: Somente a `OLLAMA_URL` é de fato consumida de forma real pelo Node na linha 41 do arquivo `/luna-api/api/chat.js`. As outras estão referenciadas sem utilidade prática no momento.
-- **Quais são seguras para o frontend (VITE_) e quais são apenas para o backend**: No código atual não foram configuradas variáveis de ambiente do tipo `VITE_` ou congêneres de modo de injeção front-end seguro. Todas as listadas são sensíveis e devem atuar apenas na API Serverless ou Backend.
+  - `OLLAMA_URL`: URL da máquina/GPU onde a LLM roda o Inference Gateway.
+  - `GEMINI_API_KEY`: Inativa, mas deixada em legado no arquivo `.env.example`.
+  - `APP_URL`: URL em desuso da máquina base legada em exemplos de variáveis.
+- **Onde cada uma é usada**: Das listadas no `.env.example`, **apenas** a `OLLAMA_URL` está em processamento funcional nas lógicas de orquestração do arquivo `luna-api/api/chat.js` para bater no LLM via node-fetch.
+- **Quais são seguras para o frontend (VITE_) e quais são apenas para o backend**: Na configuração atual do código, nenhuma variável foi criada obedecendo à sintaxe `VITE_`. Todas as chaves em produção devem ser alocadas pelo painel da Vercel (Backend Secrets). Recomenda-se portar `firebaseConfig` da aplicação Typescript para segredos com prefixo Front-end `VITE_` em uma fase posterior.
+---
