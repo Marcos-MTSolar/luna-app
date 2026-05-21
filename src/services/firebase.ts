@@ -2,7 +2,12 @@ import { initializeApp } from "firebase/app";
 import { getFirestore, doc, getDoc, setDoc, updateDoc, arrayUnion } from "firebase/firestore";
 
 const firebaseConfig = {
-  // Substitua pelos valores do seu projeto Firebase
+  apiKey: "AIzaSyDYwAbIbbOwkSu9WyXu6mS7uhPNn3Nbe8M",
+  authDomain: "luna-app-dd08b.firebaseapp.com",
+  projectId: "luna-app-dd08b",
+  storageBucket: "luna-app-dd08b.firebasestorage.app",
+  messagingSenderId: "735293551960",
+  appId: "1:735293551960:web:5df32299bcb8716928612d"
 };
 
 const app = initializeApp(firebaseConfig);
